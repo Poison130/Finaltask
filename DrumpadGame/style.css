@@ -1,0 +1,137 @@
+body {
+  background: #111;
+  color: #fff;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+#trackContainer {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 26px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.track {
+  background-color: #1c1c1c;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 12px;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  transition: border 0.3s ease, transform 0.3s ease;
+}
+
+.track.active {
+  border: 2px solid #3cff3c;
+  transform: scale(1.02);
+}
+
+.track span {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.toggle-btn {
+  background-color: #222;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background-color: #333;
+}
+
+.toggle-btn.active {
+  background-color: #3cff3c;
+  color: #000;
+}
+
+.pan-slider {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Визуализация */
+
+#background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #111 0%, #000 100%);
+  z-index: -2;
+  overflow: hidden;
+}
+
+#background::before,
+#background::after {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+  animation: move 60s infinite linear;
+}
+
+#background::after {
+  animation-duration: 80s;
+}
+
+@keyframes move {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg);
+  }
+}
+
+#visualizer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+}
+
+.exit-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #ff3c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 100;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+}
+
+.exit-btn:hover {
+  background-color: #ff1a1a;
+}

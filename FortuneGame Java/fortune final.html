@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гадание на Картах</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body{
+            background-color: #366bff;
+        }
+        .card {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card-front.selected {
+            background: linear-gradient(135deg, #7c8fee 0%, #8a5fb3 100%);
+        }
+        .bad-card {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%) !important;
+            color: white !important;
+        }
+        .bad-card.selected {
+            background: linear-gradient(135deg, #ff5579 0%, #ff5f3a 100%) !important;
+        }
+        .neutral-card {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%) !important;
+        }
+        .neutral-card.selected {
+            background: linear-gradient(135deg, #b1d0fd 0%, #d2f1fb 100%) !important;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        .selected-card {
+            transform: scale(1.08);
+            z-index: 10;
+        }
+        #selectionCounter.sticky {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s ease-out;
+            position: relative;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            color: black;
+        }
+        .form-input:focus {
+            outline: 2px solid #a78bfa;
+            background-color: white;
+        }
+        .submit-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+        }
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .zodiac-sign {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .cooldown-message {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .cooldown-timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-top: 0.5rem;
+        }
+        .hidden {
+            display: none;
+        }
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .close-modal:hover {
+            transform: scale(1.2);
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-900 min-h-screen text-white">
+    <!-- Модальное окно для данных пользователя -->
+    <div id="userDataModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title">Введите ваши данные</h2>
+            <form id="userDataForm">
+                <div class="form-group">
+                    <label for="userName" class="form-label">Ваше имя:</label>
+                    <input type="text" id="userName" class="form-input" required placeholder="Введите ваше имя">
+                </div>
+                <div class="form-group">
+                    <label for="birthDate" class="form-label">Дата рождения:</label>
+                    <input type="date" id="birthDate" class="form-input" required>
+                </div>
+                <div id="zodiacSignDisplay" class="zodiac-sign hidden">
+                    Ваш знак зодиака: <span id="zodiacSign"></span>
+                </div>
+                <div id="cooldownMessage" class="cooldown-message hidden">
+                    <p>Вы уже связывались с потусторонними силами. Пожалуйста, вернитесь завтра для нового гадания.</p>
+                    <div id="cooldownTimer" class="cooldown-timer"></div>
+                </div>
+                <button type="submit" class="submit-btn mt-4" id="submitBtn">
+                    <i class="fas fa-check mr-2"></i>Продолжить к предсказанию
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Шапка -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">✨ Предсказатель Судьбы ✨</h1>
+            <p class="text-lg md:text-xl opacity-80">Выберите 3 карты, чтобы узнать свою судьбу</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <button id="resetBtn" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-redo mr-2"></i>Сбросить
+                </button>
+                <button id="revealBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 hidden">
+                    <i class="fas fa-eye mr-2"></i>Показать предсказание
+                </button>
+            </div>
+            <!-- Счетчик -->
+            <div id="selectionCounter" class="bg-gradient-to-r from-purple-900/90 to-blue-900/90 py-3 text-center text-lg shadow-lg backdrop-blur-sm my-4 rounded-lg">
+                <i class="fas fa-cards mr-2"></i>
+                <span id="selectedCount">0</span>/3 карт выбрано
+            </div>
+            <div id="counterPlaceholder" class="counter-placeholder"></div>
+        </header>
+
+        <!-- Игровая зона -->
+        <div class="max-w-6xl mx-auto">
+            <!-- Показ выбранных карт -->
+            <div id="selectedCardsDisplay" class="bg-black bg-opacity-30 rounded-xl p-6 mb-8 hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center">Ваше предсказание</h2>
+                <div id="userGreeting" class="text-center mb-6 text-xl hidden">
+                    Имя: <span id="displayName" class="font-bold"></span>, дата рождения: <span id="displayBirthDate" class="font-bold"></span> 
+                    (<span id="displayZodiac" class="font-bold text-yellow-300"></span>)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card w-full h-64 mx-auto flipped">
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-5xl mb-4"></i>
+                                <span class="text-lg">Прошлое</span>
+                            </div>
+                            <div id="pastCard" class="card-back flex flex-col items-center justify-center p-4">
+                                <i id="pastIcon" class="text-5xl mb-4"></i>
+                                <h3 id="pastTitle" class="text-xl font-bold mb-2"></h3>
+                                <p id="pastMessage" class="text-sm text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card w-full h-64 mx-auto flipped">
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-5xl mb-4"></i>
+                                <span class="text-lg">Настоящее</span>
+                            </div>
+                            <div id="presentCard" class="card-back flex flex-col items-center justify-center p-4">
+                                <i id="presentIcon" class="text-5xl mb-4"></i>
+                                <h3 id="presentTitle" class="text-xl font-bold mb-2"></h3>
+                                <p id="presentMessage" class="text-sm text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card w-full h-64 mx-auto flipped">
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-5xl mb-4"></i>
+                                <span class="text-lg">Будущее</span>
+                            </div>
+                            <div id="futureCard" class="card-back flex flex-col items-center justify-center p-4">
+                                <i id="futureIcon" class="text-5xl mb-4"></i>
+                                <h3 id="futureTitle" class="text-xl font-bold mb-2"></h3>
+                                <p id="futureMessage" class="text-sm text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="fortuneSummary" class="mt-8 text-center bg-white bg-opacity-10 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">Ваша судьба ждёт...</h3>
+                    <p id="summaryMessage" class="text-lg">Выберите 3 карты, чтобы увидеть полное предсказание.</p>
+                </div>
+            </div>
+
+            <!-- Сетка карт -->
+            <div id="cardGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Карты будут сгенерированы JavaScript -->
+            </div>
+        </div>
+
+        <!-- Инструкции -->
+        <div class="max-w-2xl mx-auto mt-12 bg-black bg-opacity-20 p-6 rounded-xl">
+            <h2 class="text-2xl font-bold mb-4 text-center">Как играть</h2>
+            <div class="space-y-3">
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>1</span>
+                    </div>
+                    <p>Выберите 3 карты - они представляют ваше прошлое, настоящее и будущее.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>2</span>
+                    </div>
+                    <p>Введите ваши данные.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>3</span>
+                    </div>
+                    <p>Нажмите "Показать предсказание", чтобы увидеть полное гадание.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>4</span>
+                    </div>
+                    <p>Синие карты - положительные, красные - вызовы, а голубые - нейтральные.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Загружаем данные карт -->
+    <script src="cards ru.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Данные карт - 40 хороших, 10 плохих и 2 нейтральных
+            
+            // карточки хранятся в cards.js
+
+            // Состояние игры
+            let selectedCards = [];
+            let selectedIndexes = [];
+            let userData = {
+                name: '',
+                birthDate: '',
+                zodiacSign: ''
+            };
+            
+            // Ключ для localStorage
+            const COOLDOWN_KEY = 'fortuneCooldownData';
+            
+            // Проверка кулдауна для данных пользователя
+            function checkCooldown(name, birthDate) {
+                const cooldownData = JSON.parse(localStorage.getItem(COOLDOWN_KEY)) || {};
+                const userKey = `${name}_${birthDate}`;
+                
+                if (cooldownData[userKey]) {
+                    const now = new Date();
+                    const cooldownEnd = new Date(cooldownData[userKey]);
+                    
+                    if (now < cooldownEnd) {
+                        return {
+                            onCooldown: true,
+                            endTime: cooldownEnd
+                        };
+                    }
+                }
+                
+                return { onCooldown: false };
+            }
+            
+            // Установка кулдауна для данных пользователя
+            function setCooldown(name, birthDate) {
+                const cooldownData = JSON.parse(localStorage.getItem(COOLDOWN_KEY)) || {};
+                const userKey = `${name}_${birthDate}`;
+                const cooldownEnd = new Date();
+                cooldownEnd.setHours(cooldownEnd.getHours() + 24); // 24 часа кулдауна
+                
+                cooldownData[userKey] = cooldownEnd.toISOString();
+                localStorage.setItem(COOLDOWN_KEY, JSON.stringify(cooldownData));
+            }
+            
+            // Обновление таймера кулдауна
+            function updateCooldownTimer(endTime) {
+                const timerElement = document.getElementById('cooldownTimer');
+                const now = new Date();
+                const end = new Date(endTime);
+                
+                if (now >= end) {
+                    timerElement.textContent = "Кулдаун завершен!";
+                    return false;
+                }
+                
+                const diff = end - now;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                timerElement.textContent = `${hours}ч ${minutes}м ${seconds}с`;
+                return true;
+            }
+            
+            // Перемешивание карт
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // Инициализация игры
+            function initGame() {
+                const cardGrid = document.getElementById('cardGrid');
+                const revealBtn = document.getElementById('revealBtn');
+                const display = document.getElementById('selectedCardsDisplay');
+                const instructions = document.querySelector('.max-w-2xl.mx-auto.mt-12');
+                
+                cardGrid.innerHTML = '';
+                cardGrid.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+                display.classList.add('hidden');
+                instructions.classList.remove('hidden');
+                
+                selectedCards = [];
+                selectedIndexes = [];
+                updateSelectionUI(); // Обновляем счетчик при инициализации
+                
+                const shuffledCards = shuffleArray([...cards]);
+                
+                shuffledCards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card w-full h-32 sm:h-40 cursor-pointer';
+                    cardElement.dataset.index = index;
+                    
+                    // Добавляем класс для плохих карт
+                    const backClass = card.type === 'bad' ? 'bad-card' : 
+                                    card.type === 'neutral' ? 'neutral-card' : card.color;
+                    
+                    cardElement.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-3xl sm:text-4xl mb-2"></i>
+                                <span class="text-sm">Карта ${index + 1}</span>
+                            </div>
+                            <div class="card-back flex flex-col items-center justify-center p-4 ${backClass}">
+                                <i class="${card.icon} text-3xl sm:text-4xl mb-2"></i>
+                                <h3 class="text-base sm:text-lg font-bold">${card.title}</h3>
+                            </div>
+                        </div>
+                    `;
+                    
+                    cardElement.addEventListener('click', function() {
+                        const cardIndex = parseInt(this.dataset.index);
+                        const frontElement = this.querySelector('.card-front');
+                        const backElement = this.querySelector('.card-back');
+                        
+                        // Если карта уже выбрана, снимаем выбор
+                        if (selectedIndexes.includes(cardIndex)) {
+                            this.classList.remove('selected-card');
+                            frontElement.classList.remove('selected');
+                            backElement.classList.remove('selected');
+                            selectedIndexes = selectedIndexes.filter(i => i !== cardIndex);
+                            selectedCards = selectedCards.filter(c => c.index !== cardIndex);
+                            updateSelectionUI();
+                            return;
+                        }
+                        
+                        // Разрешаем выбор только если выбрано меньше 3 карт
+                        if (selectedIndexes.length < 3) {
+                            this.classList.add('selected-card');
+                            frontElement.classList.add('selected');
+                            backElement.classList.add('selected');
+                            selectedIndexes.push(cardIndex);
+                            selectedCards.push({
+                                index: cardIndex,
+                                element: this,
+                                data: shuffledCards[cardIndex]
+                            });
+                            updateSelectionUI();
+                        }
+                    });
+                    
+                    cardGrid.appendChild(cardElement);
+                });
+            }
+            
+            // Обновление UI выбора
+            function updateSelectionUI() {
+                const countSpan = document.getElementById('selectedCount');
+                const revealBtn = document.getElementById('revealBtn');
+                
+                // Анимация изменения числа
+                countSpan.classList.add('scale-125', 'text-yellow-300');
+                setTimeout(() => {
+                    countSpan.classList.remove('scale-125', 'text-yellow-300');
+                }, 300);
+                
+                countSpan.textContent = selectedIndexes.length;
+                
+                if (selectedIndexes.length === 3) {
+                    revealBtn.classList.remove('hidden');
+                } else {
+                    revealBtn.classList.add('hidden');
+                }
+            }
+
+            // Определение знака зодиака по дате рождения
+            function getZodiacSign(birthDate) {
+                const date = new Date(birthDate);
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                
+                if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Овен";
+                if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Телец";
+                if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "Близнецы";
+                if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Рак";
+                if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Лев";
+                if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Дева";
+                if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Весы";
+                if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Скорпион";
+                if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Стрелец";
+                if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Козерог";
+                if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Водолей";
+                if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Рыбы";
+                
+                return "Неизвестно";
+            }
+
+            // Показ модального окна для данных пользователя
+            function showUserDataModal() {
+                const modal = document.getElementById('userDataModal');
+                modal.style.display = 'flex';
+                
+                // Сбросим предыдущие сообщения
+                document.getElementById('cooldownMessage').classList.add('hidden');
+                document.getElementById('submitBtn').disabled = false;
+                
+                // Устанавливаем максимальную дату на сегодня
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('birthDate').max = today;
+                
+                // Фокус на поле имени
+                document.getElementById('userName').focus();
+            }
+
+            // Скрытие модального окна
+            function hideUserDataModal() {
+                const modal = document.getElementById('userDataModal');
+                modal.style.display = 'none';
+            }
+
+            // Показ предсказания
+            function revealFortune() {
+                if (selectedCards.length !== 3) return;
+                
+                // Показываем модальное окно для сбора данных
+                showUserDataModal();
+            }
+
+            // Обработка данных пользователя и показ предсказания
+            function processUserDataAndShowFortune() {
+                const name = document.getElementById('userName').value.trim();
+                const birthDate = document.getElementById('birthDate').value;
+                
+                if (!name || !birthDate) {
+                    alert('Пожалуйста, введите ваше имя и дату рождения');
+                    return false;
+                }
+                
+                // Проверяем кулдаун
+                const cooldownCheck = checkCooldown(name, birthDate);
+                if (cooldownCheck.onCooldown) {
+                    document.getElementById('cooldownMessage').classList.remove('hidden');
+                    document.getElementById('submitBtn').disabled = true;
+                    
+                    // Обновляем таймер каждую секунду
+                    const timerInterval = setInterval(() => {
+                        const stillCooldown = updateCooldownTimer(cooldownCheck.endTime);
+                        if (!stillCooldown) {
+                            clearInterval(timerInterval);
+                            document.getElementById('cooldownMessage').classList.add('hidden');
+                            document.getElementById('submitBtn').disabled = false;
+                        }
+                    }, 1000);
+                    
+                    return false;
+                }
+                
+                // Устанавливаем кулдаун
+                setCooldown(name, birthDate);
+                
+                // Сохраняем данные пользователя
+                userData.name = name;
+                userData.birthDate = birthDate;
+                userData.zodiacSign = getZodiacSign(birthDate);
+                
+                // Скрываем модальное окно
+                hideUserDataModal();
+                
+                // Обновляем отображение с информацией о пользователе
+                document.getElementById('displayName').textContent = userData.name;
+                document.getElementById('displayBirthDate').textContent = new Date(userData.birthDate).toLocaleDateString('ru-RU');
+                document.getElementById('displayZodiac').textContent = userData.zodiacSign;
+                document.getElementById('userGreeting').classList.remove('hidden');
+                
+                // Продолжаем показ предсказания
+                const display = document.getElementById('selectedCardsDisplay');
+                const revealBtn = document.getElementById('revealBtn');
+                const cardGrid = document.getElementById('cardGrid');
+                const instructions = document.querySelector('.max-w-2xl.mx-auto.mt-12'); // Секция с инструкциями
+                
+                // Скрываем сетку карт и инструкции
+                cardGrid.classList.add('hidden');
+                instructions.classList.add('hidden');
+                
+                // Переворачиваем все выбранные карты
+                selectedCards.forEach(card => {
+                    card.element.classList.add('flipped');
+                });
+                
+                // Обновляем карты для отображения
+                const pastCard = selectedCards[0].data;
+                const presentCard = selectedCards[1].data;
+                const futureCard = selectedCards[2].data;
+                
+                // Карта прошлого
+                document.getElementById('pastIcon').className = pastCard.icon + ' text-5xl mb-4';
+                document.getElementById('pastTitle').textContent = pastCard.title;
+                document.getElementById('pastMessage').textContent = pastCard.message;
+                document.getElementById('pastCard').className = 
+                    `card-back flex flex-col items-center justify-center p-4 ${pastCard.type === 'bad' ? 'bad-card' : pastCard.type === 'neutral' ? 'neutral-card' : pastCard.color}`;
+                
+                // Карта настоящего
+                document.getElementById('presentIcon').className = presentCard.icon + ' text-5xl mb-4';
+                document.getElementById('presentTitle').textContent = presentCard.title;
+                document.getElementById('presentMessage').textContent = presentCard.message;
+                document.getElementById('presentCard').className = 
+                    `card-back flex flex-col items-center justify-center p-4 ${presentCard.type === 'bad' ? 'bad-card' : presentCard.type === 'neutral' ? 'neutral-card' : presentCard.color}`;
+                
+                // Карта будущего
+                document.getElementById('futureIcon').className = futureCard.icon + ' text-5xl mb-4';
+                document.getElementById('futureTitle').textContent = futureCard.title;
+                document.getElementById('futureMessage').textContent = futureCard.message;
+                document.getElementById('futureCard').className = 
+                    `card-back flex flex-col items-center justify-center p-4 ${futureCard.type === 'bad' ? 'bad-card' : futureCard.type === 'neutral' ? 'neutral-card' : futureCard.color}`;
+                
+                // Создаем сводное сообщение
+                const summary = generateSummary(pastCard, presentCard, futureCard);
+                document.getElementById('summaryMessage').innerHTML = summary;
+                
+                // Показываем отображение
+                display.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+                
+                // Отключаем все невыбранные карты
+                const allCards = document.querySelectorAll('.card');
+                allCards.forEach(card => {
+                    if (!selectedIndexes.includes(parseInt(card.dataset.index))) {
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = 'none';
+                    }
+                });
+                
+                return true;
+            }
+
+            // Генерация сводки предсказания (все карты о будущем)
+            function generateSummary(card1, card2, card3) {
+                let summary = '';
+                
+                // Вступление на основе типов карт
+                const goodCount = [card1, card2, card3].filter(c => c.type === 'good').length;
+                const badCount = [card1, card2, card3].filter(c => c.type === 'bad').length;
+                
+                if (badCount === 0) {
+                    summary += `<p class="mb-4">✨ <strong>Потрясающие перспективы!</strong> Все три карты предвещают положительные события в ближайшем будущем. ✨</p>`;
+                } else if (badCount === 3) {
+                    summary += `<p class="mb-4">⚠️ <strong>Будьте готовы к испытаниям</strong>, но помните, что трудности ведут к росту и трансформации. ⚠️</p>`;
+                } else {
+                    summary += `<p class="mb-4">🔮 <strong>Смешанные влияния</strong> ожидают вас, принося как возможности, так и вызовы. 🔮</p>`;
+                }
+                
+                // Анализ комбинации карт
+                summary += `<p class="mb-4">`;
+                
+                if (goodCount >= 2) {
+                    summary += `Преобладание положительных карт говорит о благоприятном периоде. `;
+                    if (badCount === 1) {
+                        summary += `Единственное предостережение (${[card1, card2, card3].find(c => c.type === 'bad').title}) требует вашего внимания, но не сможет перевесить общий позитивный тренд.`;
+                    }
+                } else if (badCount >= 2) {
+                    summary += `Несколько карт предупреждают о сложностях. `;
+                    if (goodCount === 1) {
+                        summary += `Карта ${[card1, card2, card3].find(c => c.type === 'good').title} показывает точку опоры - используйте эту возможность для преодоления трудностей.`;
+                    }
+                } else {
+                    summary += `Баланс сил в вашем будущем требует гибкости и мудрости в принятии решений.`;
+                }
+                
+                // Заключительный совет
+                summary += `</p><p class="mt-4">`;
+                
+                if (goodCount >= 2) {
+                    summary += `Используйте этот благоприятный период максимально эффективно. Доверьтесь потоку событий, но оставайтесь внимательны к знакам.`;
+                } else if (badCount >= 2) {
+                    summary += `Подготовьтесь к этому периоду заранее. Сосредоточьтесь на решении одной проблемы за раз, не пытайтесь объять необъятное.`;
+                } else {
+                    summary += `Сохраняйте равновесие между активностью и терпением. Ваши решения в этот период особенно важны.`;
+                }
+                
+                summary += `</p>`;
+                
+                return summary;
+            }
+
+            // Кнопка сброса - возвращает в главное меню
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                const display = document.getElementById('selectedCardsDisplay');
+                const cardGrid = document.getElementById('cardGrid');
+                const instructions = document.querySelector('.max-w-2xl.mx-auto.mt-12');
+                
+                // Если открыт показ результата, скрываем его и показываем сетку карт
+                if (!display.classList.contains('hidden')) {
+                    display.classList.add('hidden');
+                    cardGrid.classList.remove('hidden');
+                    instructions.classList.remove('hidden');
+                }
+                
+                // Всегда переинициализируем игру
+                initGame();
+            });
+
+            // Кнопка показа предсказания
+            document.getElementById('revealBtn').addEventListener('click', function() {
+                revealFortune();
+            });
+            
+            // Отправка формы данных пользователя
+            document.getElementById('userDataForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                processUserDataAndShowFortune();
+            });
+            
+            // Показ знака зодиака при выборе даты
+            document.getElementById('birthDate').addEventListener('change', function() {
+                const birthDate = this.value;
+                if (birthDate) {
+                    const zodiacSign = getZodiacSign(birthDate);
+                    document.getElementById('zodiacSign').textContent = zodiacSign;
+                    document.getElementById('zodiacSignDisplay').classList.remove('hidden');
+                }
+            });
+            
+            // Кнопка закрытия модального окна
+            document.getElementById('closeModalBtn').addEventListener('click', function() {
+                hideUserDataModal();
+            });
+            
+            // Логика прилипающего счетчика
+            const counter = document.getElementById('selectionCounter');
+            const placeholder = document.getElementById('counterPlaceholder');
+            const counterOffset = counter.offsetTop;
+            const counterHeight = counter.offsetHeight;
+            
+            function handleScroll() {
+                const scrollPosition = window.scrollY;
+                
+                if (scrollPosition >= counterOffset) {
+                    counter.classList.add('sticky');
+                    placeholder.style.height = counterHeight + 'px';
+                } else {
+                    counter.classList.remove('sticky');
+                    placeholder.style.height = '0';
+                }
+            }
+            
+            window.addEventListener('scroll', handleScroll);
+            
+            // Инициализация игры
+            initGame();
+        });
+    </script>
+</body>
+</html>

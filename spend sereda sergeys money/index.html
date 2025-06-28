@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend Sereda Sergey's Money</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="Icon" type="png" href="pictures/dollar.png">
+</head>
+<body>
+    <div class="container">
+        <div class="money-container">
+            <a href="/hub/index.html" id="exit-link" class="exit-button">Выход</a>
+            <button id="bank-button">Банк</button>
+            <button id="sell-all-button" class="sell-all">Продать все</button>
+<div id="bank-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Кредит</h2>
+        <p>Вы можете взять кредит в размере $10,000,000. Это можно сделать только один раз.</p>
+        <button id="take-loan">Взять кредит</button>
+    </div>
+</div>
+            <img src="pictures/Bublik2.png" alt="#" class="Sergey">
+            <p class="sssm">Spend Sereda Sergey's Money</p>   
+        </div>
+        <p class="money" id="money">$100</p>
+        <div id="items-container" class="items-container"></div>
+        <div class="receipt">
+            <h2>Твой чек</h2>
+            <ul id="receipt-list"></ul>
+            <hr>
+            <div class="total">
+                <span>Сумма</span>
+                <span class="price" id="total">$0</span>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

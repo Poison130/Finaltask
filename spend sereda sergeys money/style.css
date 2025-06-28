@@ -1,0 +1,333 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1e2121;
+    color: #e8e6e3;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.Sergey {
+    width: 165px;
+    height: 165px;
+    border-radius: 100%;
+    object-fit: cover;
+}
+
+.container {
+    width: 60%;
+    margin: auto;
+}
+
+.sssm {
+    font-size: 35px;
+    color: #cecece;
+    font-weight: 900;
+    margin-top: 30px;
+    margin-bottom: 70px;
+}
+
+/* Баланс */
+.money-container {
+    background-color: #191b1cf1;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    padding-top: 30px;
+}
+
+
+.money {
+    font-size: 40px;
+    font-weight: 550;
+    color: #ffffff;
+    background: linear-gradient(180deg, #03a04a, #035729);
+    padding: 10px;
+    top: 0;
+    transition: color 0.5s ease;
+    margin: 0 auto;
+    position: sticky;
+    z-index: 1000;
+}
+
+/* Анимация встряхивания */
+.shake {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+}
+
+/* Карточки товаров */
+.items-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.item {
+    background-color: #191b1cf1;
+    padding: 12px;
+    border-radius: 10px;
+    width: 30%;
+    margin-bottom: 10px;
+    margin-top: 12px;
+    text-align: center;
+}
+
+.item img {
+    width: 260px;
+    height: 250px;
+    object-fit: fill;
+    margin-bottom: 30px;
+}
+
+.item h3 {
+    font-size: 25px;
+    margin-bottom: -10px;
+}
+
+.item .price {
+    font-size: 25px;
+    margin-top: 20px;
+    color: #60d394;
+}
+
+/* Ввод количества */
+.item input {
+    width: 60px;
+    font-size: 18px;
+    padding: 5px;
+    margin: 5px;
+}
+
+/* Кнопки */
+.buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+button {
+    border: none;
+    padding: 10px 30px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+.buy {
+    background-color: #03a04a;
+    color: white;
+}
+
+.sell {
+    background-color: #555;
+    color: white;
+    cursor: not-allowed;
+}
+
+.sell.active {
+    background-color: #e74c3c;
+    cursor: pointer;
+}
+
+/* Чек */
+.receipt {
+    background: #00000027;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    margin: 30px auto;
+    text-align: left;
+}
+
+.receipt h2 {
+    text-align: center;
+}
+
+#receipt-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#receipt-list li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    margin: 5px 0;
+    color: white;
+}
+
+.total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 15px;
+    color: #03a04a;
+}
+
+
+.item-quantity {
+    text-align: center;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    background-color: rgba(128, 128, 128, 0.5); /* Полупрозрачный серый */
+    opacity: 60%;
+    color: white;
+    padding: 5px;
+}
+
+
+/* Кнопка банка */
+#bank-button {
+    position: fixed;
+    top: 12px;
+    right: 30px;
+    background-color: #d4af37;
+    color: black;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 25px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 1001;
+    width: 300px;
+    text-align: center;
+}
+
+.modal-content {
+    color: white;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+/* Эффект увеличения кнопок при наведении */
+button:hover {
+    transform: scale(1.1);
+    transition: transform 0.15s ease-in-out;
+}
+
+#sell-all-button {
+    position: fixed;
+    top: 12px;
+    left: 30px;
+    background-color: #555;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+#sell-all-button.active {
+    background-color: #e74c3c;
+    background: #e74c3c;
+    cursor: pointer;
+}
+
+input[type="number"] {
+  height: 40px;  /* Высота кнопок и input */
+  font-size: 16px; /* Размер шрифта */
+  padding: 0 10px; /* Отступы по бокам */
+  border-radius: 5px; /* Скругление углов */
+  width: 60px;
+}
+
+/* Убираем стандартное оформление input */
+input[type="number"] {
+display: flex;
+  text-align: center; /* Выравнивание текста по центру */
+  border: 1px solid #ccc; /* Рамка */
+  
+}
+
+/* Кнопка выхода */
+#exit-button {
+    position: fixed;
+    top: 12px;
+    left: 30px;
+    background-color: #555;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+#exit-button:hover {
+    background-color: #777;
+    transform: scale(1.1);
+    transition: transform 0.15s ease-in-out;
+}
+
+/* Обновленное положение кнопки "Продать все" */
+#sell-all-button {
+    position: fixed;
+    top: 12px;
+    left: 100px; /* Сдвинуто вправо, чтобы освободить место для кнопки выхода */
+}
+
+/* Стили для ссылки выхода */
+#exit-link {
+    position: fixed;
+    top: 12px;
+    left: 10px;
+    background-color: #555;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 25px;
+    border-radius: 5px; 
+    z-index: 1000;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+#exit-link:hover {
+    background-color: #777;
+    transform: scale(1.1);
+}
+
+/* Обновленное положение кнопки "Продать все" */
+#sell-all-button {
+    position: fixed;
+    top: 12px;
+    left: 130px; /* Сдвинуто вправо, чтобы освободить место для кнопки выхода */
+}

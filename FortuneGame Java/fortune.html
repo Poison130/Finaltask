@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortune Teller Card Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body{
+            background-color: #366bff;
+        }
+        .card {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card-front.selected {
+            background: linear-gradient(135deg, #7c8fee 0%, #8a5fb3 100%);
+        }
+        .bad-card {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%) !important;
+            color: white !important;
+        }
+        .bad-card.selected {
+            background: linear-gradient(135deg, #ff5579 0%, #ff5f3a 100%) !important;
+        }
+        .neutral-card {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%) !important;
+        }
+        .neutral-card.selected {
+            background: linear-gradient(135deg, #b1d0fd 0%, #d2f1fb 100%) !important;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        .selected-card {
+            transform: scale(1.08);
+            z-index: 10;
+        }
+        #selectionCounter.sticky {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-900 min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">✨ Fortune Teller ✨</h1>
+            <p class="text-lg md:text-xl opacity-80">Select 3 cards to reveal your destiny</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <button id="resetBtn" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-redo mr-2"></i>Reset
+                </button>
+                <button id="revealBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 hidden">
+                    <i class="fas fa-eye mr-2"></i>Reveal Fortune
+                </button>
+            </div>
+            <!-- Счетчик под кнопками -->
+            <div id="selectionCounter" class="bg-gradient-to-r from-purple-900/90 to-blue-900/90 py-3 text-center text-lg shadow-lg backdrop-blur-sm my-4 rounded-lg">
+                <i class="fas fa-cards mr-2"></i>
+                <span id="selectedCount">0</span>/3 cards selected
+            </div>
+            <div id="counterPlaceholder" class="counter-placeholder"></div>
+        </header>
+
+        <!-- Game Area -->
+        <div class="max-w-6xl mx-auto">
+            <!-- Selected Cards Display -->
+            <div id="selectedCardsDisplay" class="bg-black bg-opacity-30 rounded-xl p-6 mb-8 hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center">Your Fortune Reading</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card w-full h-64 mx-auto flipped">
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-5xl mb-4"></i>
+                                <span class="text-lg">Past</span>
+                            </div>
+                            <div id="pastCard" class="card-back flex flex-col items-center justify-center p-4">
+                                <i id="pastIcon" class="text-5xl mb-4"></i>
+                                <h3 id="pastTitle" class="text-xl font-bold mb-2"></h3>
+                                <p id="pastMessage" class="text-sm text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card w-full h-64 mx-auto flipped">
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-5xl mb-4"></i>
+                                <span class="text-lg">Present</span>
+                            </div>
+                            <div id="presentCard" class="card-back flex flex-col items-center justify-center p-4">
+                                <i id="presentIcon" class="text-5xl mb-4"></i>
+                                <h3 id="presentTitle" class="text-xl font-bold mb-2"></h3>
+                                <p id="presentMessage" class="text-sm text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card w-full h-64 mx-auto flipped">
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-5xl mb-4"></i>
+                                <span class="text-lg">Future</span>
+                            </div>
+                            <div id="futureCard" class="card-back flex flex-col items-center justify-center p-4">
+                                <i id="futureIcon" class="text-5xl mb-4"></i>
+                                <h3 id="futureTitle" class="text-xl font-bold mb-2"></h3>
+                                <p id="futureMessage" class="text-sm text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="fortuneSummary" class="mt-8 text-center bg-white bg-opacity-10 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">Your Destiny Awaits...</h3>
+                    <p id="summaryMessage" class="text-lg">Select 3 cards to reveal your complete fortune reading.</p>
+                </div>
+            </div>
+
+            <!-- Card Grid -->
+            <div id="cardGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="max-w-2xl mx-auto mt-12 bg-black bg-opacity-20 p-6 rounded-xl">
+            <h2 class="text-2xl font-bold mb-4 text-center">How to Play</h2>
+            <div class="space-y-3">
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>1</span>
+                    </div>
+                    <p>Focus on a question or situation you'd like guidance about.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>2</span>
+                    </div>
+                    <p>Select 3 cards - they represent your past, present, and future.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>3</span>
+                    </div>
+                    <p>Click "Reveal Fortune" to see your complete reading.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                        <span>4</span>
+                    </div>
+                    <p>Blue cards are positive, red cards are challenges, and light blue are neutral.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load cards data first -->
+    <script src="cards.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Card data - 40 good, 10 bad, and 2 neutral
+            
+            // карточки хранятся в cards.js
+
+            // Game state
+            let selectedCards = [];
+            let selectedIndexes = [];
+            
+            // Shuffle cards
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // Initialize game
+            function initGame() {
+                const cardGrid = document.getElementById('cardGrid');
+                const revealBtn = document.getElementById('revealBtn');
+                const display = document.getElementById('selectedCardsDisplay');
+                const instructions = document.querySelector('.max-w-2xl.mx-auto.mt-12');
+                
+                cardGrid.innerHTML = '';
+                cardGrid.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+                display.classList.add('hidden');
+                instructions.classList.remove('hidden');
+                
+                selectedCards = [];
+                selectedIndexes = [];
+                updateSelectionUI(); // Обновляем счетчик при инициализации
+                
+                const shuffledCards = shuffleArray([...cards]);
+                
+                shuffledCards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card w-full h-32 sm:h-40 cursor-pointer';
+                    cardElement.dataset.index = index;
+                    
+                    // Add class for bad cards
+                    const backClass = card.type === 'bad' ? 'bad-card' : 
+                                    card.type === 'neutral' ? 'neutral-card' : card.color;
+                    
+                    cardElement.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-front flex flex-col items-center justify-center p-4">
+                                <i class="fas fa-question text-3xl sm:text-4xl mb-2"></i>
+                                <span class="text-sm">Card ${index + 1}</span>
+                            </div>
+                            <div class="card-back flex flex-col items-center justify-center p-4 ${backClass}">
+                                <i class="${card.icon} text-3xl sm:text-4xl mb-2"></i>
+                                <h3 class="text-base sm:text-lg font-bold">${card.title}</h3>
+                            </div>
+                        </div>
+                    `;
+                    
+                    cardElement.addEventListener('click', function() {
+                        const cardIndex = parseInt(this.dataset.index);
+                        const frontElement = this.querySelector('.card-front');
+                        const backElement = this.querySelector('.card-back');
+                        
+                        // If card is already selected, deselect it
+                        if (selectedIndexes.includes(cardIndex)) {
+                            this.classList.remove('selected-card');
+                            frontElement.classList.remove('selected');
+                            backElement.classList.remove('selected');
+                            selectedIndexes = selectedIndexes.filter(i => i !== cardIndex);
+                            selectedCards = selectedCards.filter(c => c.index !== cardIndex);
+                            updateSelectionUI();
+                            return;
+                        }
+                        
+                        // Only allow selecting if less than 3 cards are selected
+                        if (selectedIndexes.length < 3) {
+                            this.classList.add('selected-card');
+                            frontElement.classList.add('selected');
+                            backElement.classList.add('selected');
+                            selectedIndexes.push(cardIndex);
+                            selectedCards.push({
+                                index: cardIndex,
+                                element: this,
+                                data: shuffledCards[cardIndex]
+                            });
+                            updateSelectionUI();
+                        }
+                    });
+                    
+                    cardGrid.appendChild(cardElement);
+                });
+            }
+            
+            // Update selection UI
+            function updateSelectionUI() {
+                const countSpan = document.getElementById('selectedCount');
+                const revealBtn = document.getElementById('revealBtn');
+                
+                // Анимация изменения числа
+                countSpan.classList.add('scale-125', 'text-yellow-300');
+                setTimeout(() => {
+                    countSpan.classList.remove('scale-125', 'text-yellow-300');
+                }, 300);
+                
+                countSpan.textContent = selectedIndexes.length;
+                
+                if (selectedIndexes.length === 3) {
+                    revealBtn.classList.remove('hidden');
+                } else {
+                    revealBtn.classList.add('hidden');
+                }
+            }
+
+            // Reveal fortune
+            function revealFortune() {
+                if (selectedCards.length !== 3) return;
+                
+                const display = document.getElementById('selectedCardsDisplay');
+                const revealBtn = document.getElementById('revealBtn');
+                const cardGrid = document.getElementById('cardGrid');
+                const instructions = document.querySelector('.max-w-2xl.mx-auto.mt-12'); // Instructions section
+                
+                // Hide the card grid and instructions
+                cardGrid.classList.add('hidden');
+                instructions.classList.add('hidden');
+                
+                // Flip all selected cards
+                selectedCards.forEach(card => {
+                    card.element.classList.add('flipped');
+                });
+                
+                // Update the display cards
+                const pastCard = selectedCards[0].data;
+                const presentCard = selectedCards[1].data;
+                const futureCard = selectedCards[2].data;
+                
+                // Past card
+                document.getElementById('pastIcon').className = pastCard.icon + ' text-5xl mb-4';
+                document.getElementById('pastTitle').textContent = pastCard.title;
+                document.getElementById('pastMessage').textContent = pastCard.message;
+                document.getElementById('pastCard').className = 
+                    `card-back flex flex-col items-center justify-center p-4 ${pastCard.type === 'bad' ? 'bad-card' : pastCard.type === 'neutral' ? 'neutral-card' : pastCard.color}`;
+                
+                // Present card
+                document.getElementById('presentIcon').className = presentCard.icon + ' text-5xl mb-4';
+                document.getElementById('presentTitle').textContent = presentCard.title;
+                document.getElementById('presentMessage').textContent = presentCard.message;
+                document.getElementById('presentCard').className = 
+                    `card-back flex flex-col items-center justify-center p-4 ${presentCard.type === 'bad' ? 'bad-card' : presentCard.type === 'neutral' ? 'neutral-card' : presentCard.color}`;
+                
+                // Future card
+                document.getElementById('futureIcon').className = futureCard.icon + ' text-5xl mb-4';
+                document.getElementById('futureTitle').textContent = futureCard.title;
+                document.getElementById('futureMessage').textContent = futureCard.message;
+                document.getElementById('futureCard').className = 
+                    `card-back flex flex-col items-center justify-center p-4 ${futureCard.type === 'bad' ? 'bad-card' : futureCard.type === 'neutral' ? 'neutral-card' : futureCard.color}`;
+                
+                // Create summary message
+                const summary = generateSummary(pastCard, presentCard, futureCard);
+                document.getElementById('summaryMessage').innerHTML = summary;
+                
+                // Show the display
+                display.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+                
+                // Disable all unselected cards
+                const allCards = document.querySelectorAll('.card');
+                allCards.forEach(card => {
+                    if (!selectedIndexes.includes(parseInt(card.dataset.index))) {
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = 'none';
+                    }
+                });
+            }
+
+            // Generate fortune summary
+            function generateSummary(past, present, future) {
+                let summary = '';
+                
+                // Opening based on card types
+                const goodCount = [past, present, future].filter(c => c.type === 'good').length;
+                const badCount = [past, present, future].filter(c => c.type === 'bad').length;
+                
+                if (badCount === 0) {
+                    summary += `<p class="mb-4">✨ <strong>Excellent fortune!</strong> All three cards reveal positive energies surrounding you. ✨</p>`;
+                } else if (badCount === 3) {
+                    summary += `<p class="mb-4">⚠️ <strong>Challenging times ahead</strong>, but remember that difficulties often precede important growth. ⚠️</p>`;
+                } else {
+                    summary += `<p class="mb-4">🔮 <strong>Mixed influences</strong> are at work in your life, bringing both opportunities and challenges. 🔮</p>`;
+                }
+                
+                // Past-Present-Flow analysis
+                summary += `<p class="mb-4"><strong>Your past</strong> (${past.title}) has shaped your current situation (${present.title}), `;
+                
+                if (past.type === 'good' && present.type === 'good') {
+                    summary += `and this positive momentum continues to build.`;
+                } else if (past.type === 'bad' && present.type === 'good') {
+                    summary += `but you've successfully overcome those challenges.`;
+                } else if (past.type === 'good' && present.type === 'bad') {
+                    summary += `but recent difficulties have emerged that require your attention.`;
+                } else if (past.type === 'bad' && present.type === 'bad') {
+                    summary += `and these ongoing challenges are testing your resilience.`;
+                } else {
+                    summary += `creating a complex situation that requires careful navigation.`;
+                }
+                
+                // Future advice
+                summary += ` <strong>Looking ahead</strong> (${future.title}), `;
+                
+                if (future.type === 'good') {
+                    summary += `the outlook is promising. ${future.message.split('.')[0]}.`;
+                    
+                    if (present.type === 'bad') {
+                        summary += ` The current difficulties will pass, leading to better times.`;
+                    }
+                } else if (future.type === 'bad') {
+                    summary += `challenges await. ${future.message.split('.')[0]}.`;
+                    
+                    if (goodCount >= 2) {
+                        summary += ` However, your positive influences will help you overcome these obstacles.`;
+                    }
+                } else {
+                    summary += `the situation remains uncertain. ${future.message.split('.')[0]}.`;
+                }
+                
+                // Final advice
+                summary += `</p><p class="mt-4">`;
+                
+                if (future.type === 'good') {
+                    summary += `Prepare yourself to receive these blessings. Stay open to opportunities and maintain a positive attitude.`;
+                } else if (future.type === 'bad') {
+                    summary += `Use this warning to prepare yourself. Forewarned is forearmed—you can mitigate these challenges with awareness.`;
+                } else {
+                    summary += `Maintain balance and patience. The answers will reveal themselves in perfect timing.`;
+                }
+                
+                summary += `</p>`;
+                
+                return summary;
+            }
+
+            // Reset button - возвращает в главное меню
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                const display = document.getElementById('selectedCardsDisplay');
+                const cardGrid = document.getElementById('cardGrid');
+                const instructions = document.querySelector('.max-w-2xl.mx-auto.mt-12');
+                
+                // Если открыт показ результата, скрываем его и показываем сетку карт
+                if (!display.classList.contains('hidden')) {
+                    display.classList.add('hidden');
+                    cardGrid.classList.remove('hidden');
+                    instructions.classList.remove('hidden');
+                }
+                
+                // Всегда переинициализируем игру
+                initGame();
+            });
+
+            // Reveal button
+            document.getElementById('revealBtn').addEventListener('click', function() {
+                revealFortune();
+            });
+            
+            // Sticky counter logic
+            const counter = document.getElementById('selectionCounter');
+            const placeholder = document.getElementById('counterPlaceholder');
+            const counterOffset = counter.offsetTop;
+            const counterHeight = counter.offsetHeight;
+            
+            function handleScroll() {
+                const scrollPosition = window.scrollY;
+                
+                if (scrollPosition >= counterOffset) {
+                    counter.classList.add('sticky');
+                    placeholder.style.height = counterHeight + 'px';
+                } else {
+                    counter.classList.remove('sticky');
+                    placeholder.style.height = '0';
+                }
+            }
+            
+            window.addEventListener('scroll', handleScroll);
+            
+            // Initialize the game
+            initGame();
+        });
+    </script>
+</body>
+</html>
